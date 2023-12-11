@@ -17,7 +17,7 @@ function clickOnStart() {
 
 function clickOnStop() {
   clearInterval(intervalId);
-  selectors.startrBtn.removeAttribute('disabled');
+  selectors.startrBtn.removeAttribute('disabled', true);
 }
 
 function getRandomHexColor() {
