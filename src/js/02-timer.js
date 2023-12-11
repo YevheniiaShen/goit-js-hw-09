@@ -2,89 +2,77 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import Notiflix from 'notiflix';
 
-const inputDate = document.querySelector('#datetime-picker');
-const btnStart = document.querySelector('[data-start]');
-const remainingDay = document.querySelector('[data-days]');
-const remainingHours = document.querySelector('[data-hours]');
-const remainingMinutes = document.querySelector('[data-minutes]');
-const remainingSeconds = document.querySelector('[data-seconds]');
+const input = document.querySelector('#datetime-picker');
+const startBtn = document.querySelector('[data-start]');
+const days = document.querySelector('[data-days]');
+const hours = document.querySelector('[data-hours]');
+const minutes = document.querySelector('[data-minutes]');
+const seconds = document.querySelector('[data-seconds]');
+let chossenTime = null;
 
-let deadline = 0;
-let formatDate = null;
-let timerId = null;
+startBtn.addEventListener('click', clickOnStartBtn);
+
+startBtn.setAttribute('disabled', true);
+
 const options = {
   enableTime: true,
   time_24hr: true,
   defaultDate: new Date(),
   minuteIncrement: 1,
+
   onClose(selectedDates) {
-    console.log(selectedDates[0]);
-    differenceDate(selectedDates[0]);
+    const timeNow = new Date().getTime();
+    chossenTime = new Date(selectedDates[0]).getTime();
+
+    if (timeNow > chossenTime) {
+      startBtn.setAttribute('disabled', true);
+      Notiflix.Notify.failure('Please choose a date in the future');
+    } else {
+      startBtn.removeAttribute('disabled');
+    }
   },
 };
-btnStart.disabled = true;
 
-flatpickr('#datetime-picker', options);
+flatpickr(input, options);
 
-btnStart.addEventListener('click', clickOn);
+function clickOnStartBtn() {
+  let id = setInterval(() => {
+    let differenceTimes = chossenTime - new Date().getTime();
+    let {
+      days: day,
+      hours: hour,
+      minutes: min,
+      seconds: sec,
+    } = convertMs(differenceTimes);
 
-function clickOn() {
-  timerId = setInterval(() => {
-    btnStart.disabled = true;
-    deadline -= 1000;
-    if (
-      remainingSeconds.textContent <= 0 &&
-      remainingMinutes.textContent <= 0
-    ) {
-      Notiflix.Notify.success('Time end');
-      clearInterval(timerId);
-    } else {
-      formatDate = convertMs(deadline);
-      renderDate(formatDate);
+    if (differenceTimes <= 0) {
+      clearInterval(id);
+      return;
     }
+
+    days.textContent = day;
+    hours.textContent = hour;
+    minutes.textContent = min;
+    seconds.textContent = sec;
   }, 1000);
 }
 
-function differenceDate(selectedDates) {
-  const currentDate = Date.now();
-  if (selectedDates < currentDate) {
-    btnStart.disabled = true;
-    return Notiflix.Notify.failure('Please choose a date in the future');
-  }
-  deadline = selectedDates - currentDate;
-  formatDate = convertMs(deadline);
-  renderDate(formatDate);
-  btnStart.disabled = false;
-}
-
-function renderDate(formatDate) {
-  remainingSeconds.textContent = formatDate.seconds;
-  remainingMinutes.textContent = formatDate.minutes;
-  remainingHours.textContent = formatDate.hours;
-  remainingDay.textContent = formatDate.days;
+function addLeadingZero(value) {
+  return String(value).padStart(2, '0');
 }
 
 function convertMs(ms) {
-  // Number of milliseconds per unit of time
   const second = 1000;
   const minute = second * 60;
   const hour = minute * 60;
   const day = hour * 24;
 
-  // Remaining days
   const days = addLeadingZero(Math.floor(ms / day));
-  // Remaining hours
   const hours = addLeadingZero(Math.floor((ms % day) / hour));
-  // Remaining minutes
   const minutes = addLeadingZero(Math.floor(((ms % day) % hour) / minute));
-  // Remaining seconds
   const seconds = addLeadingZero(
     Math.floor((((ms % day) % hour) % minute) / second)
   );
-  addLeadingZero();
-  return { days, hours, minutes, seconds };
-}
 
-function addLeadingZero(value) {
-  return String(value).padStart(2, '0');
+  return { days, hours, minutes, seconds };
 }

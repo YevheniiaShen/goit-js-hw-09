@@ -1,34 +1,26 @@
-import Notiflix from 'notiflix';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 const form = document.querySelector('.form');
+form.addEventListener('submit', handleClick);
 
-form.addEventListener('submit', btnOnSubmit);
-
-function btnOnSubmit(event) {
-  event.preventDefault();
-
+function handleClick(e) {
+  e.preventDefault();
   let delay = Number(form.delay.value);
-
   for (let i = 1; i <= form.amount.value; i += 1) {
     createPromise(i, delay)
       .then(({ position, delay }) => {
-        Notiflix.Notify.success(
-          `✅ Fulfilled promise ${position} in ${delay}ms`
-        );
+        Notify.success(`✅ Fulfilled promise ${position} in ${delay}ms`);
       })
       .catch(({ position, delay }) => {
-        Notiflix.Notify.failure(
-          `❌ Rejected promise ${position} in ${delay}ms`
-        );
+        Notify.failure(`❌ Rejected promise ${position} in ${delay}ms`);
       });
     delay += Number(form.step.value);
   }
 }
 
 function createPromise(position, delay) {
-  const obj = { position, delay };
   const shouldResolve = Math.random() > 0.3;
-
+  const obj = { position, delay };
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (shouldResolve) {
